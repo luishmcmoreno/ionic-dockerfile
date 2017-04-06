@@ -1,42 +1,16 @@
 
-FROM node:latest
+FROM beevelop/android
 
-# prepare a user which runs everything locally! - required in child images!
-RUN useradd --user-group --create-home --shell /bin/false app
+MAINTAINER Luis Henrique Moreno <luishmcmoreno@gmail.com>
 
-ENV HOME=/home/app
-WORKDIR $HOME
+ENV NODEJS_VERSION=7.8.0 \
+    PATH=$PATH:/opt/node/bin
 
-RUN npm install -g ionic cordova
+WORKDIR "/opt/node"
 
-# Install java7
-RUN apt-get update && \
-  apt-get install -y software-properties-common && \
-  add-apt-repository -y ppa:webupd8team/java && \
-  (echo oracle-java7-installer shared/accepted-oracle-license-v1-1 select true | /usr/bin/debconf-set-selections) && \
-  apt-get update && \
-  apt-get install -y oracle-java7-installer && \
-  apt-get clean && \
-  rm -fr /var/lib/apt/lists/* /tmp/* /var/tmp/*
-ENV JAVA7_HOME /usr/lib/jvm/java-7-oracle
+RUN apt-get update && apt-get install -y curl ca-certificates --no-install-recommends && \
+    curl -sL https://nodejs.org/dist/v${NODEJS_VERSION}/node-v${NODEJS_VERSION}-linux-x64.tar.gz | tar xz --strip-components=1 && \
+    rm -rf /var/lib/apt/lists/* && \
+    apt-get clean
 
-# Install java8
-RUN apt-get update && \
-  apt-get install -y software-properties-common && \
-  add-apt-repository -y ppa:webupd8team/java && \
-  (echo oracle-java8-installer shared/accepted-oracle-license-v1-1 select true | /usr/bin/debconf-set-selections) && \
-  apt-get update && \
-  apt-get install -y oracle-java8-installer && \
-  apt-get clean && \
-  rm -fr /var/lib/apt/lists/* /tmp/* /var/tmp/*
-ENV JAVA8_HOME /usr/lib/jvm/java-8-oracle
-ENV JAVA_HOME /usr/lib/jvm/java-8-oracle
-
-# Install Deps
-RUN dpkg --add-architecture i386 && apt-get update && apt-get install -y --force-yes unzip expect git wget libc6-i386 lib32stdc++6 lib32gcc1 lib32ncurses5 lib32z1 python curl libqt5widgets5 && apt-get clean && rm -fr /var/lib/apt/lists/* /tmp/* /var/tmp/*
-
-# Copy install tools
-COPY tools /opt/tools
-ENV PATH ${PATH}:/opt/tools
-
-EXPOSE 4200
+RUN npm install -g npm n && n stable && npm install -g ionic cordova
